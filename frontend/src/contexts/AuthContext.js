@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { mockUsers } from '../mock';
+import { mockUsers as initialMockUsers } from '../mock';
 
 const AuthContext = createContext();
 
@@ -14,8 +14,18 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [users, setUsers] = useState([]);
 
   useEffect(() => {
+    // Initialize users from localStorage or use initial mock data
+    const storedUsers = localStorage.getItem('appUsers');
+    if (storedUsers) {
+      setUsers(JSON.parse(storedUsers));
+    } else {
+      setUsers(initialMockUsers);
+      localStorage.setItem('appUsers', JSON.stringify(initialMockUsers));
+    }
+
     // Check for stored user on mount
     const storedUser = localStorage.getItem('currentUser');
     if (storedUser) {
@@ -25,7 +35,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = (username, password) => {
-    const user = mockUsers.find(u => u.username === username && u.password === password);
+    const user = users.find(u => u.username === username && u.password === password);
     if (user) {
       setCurrentUser(user);
       localStorage.setItem('currentUser', JSON.stringify(user));
@@ -35,18 +45,21 @@ export const AuthProvider = ({ children }) => {
   };
 
   const register = (userData) => {
-    const existingUser = mockUsers.find(u => u.username === userData.username || u.email === userData.email);
+    const existingUser = users.find(u => u.username === userData.username || u.email === userData.email);
     if (existingUser) {
       return { success: false, error: 'Nom d\'utilisateur ou email déjà utilisé.' };
     }
     
     const newUser = {
-      id: mockUsers.length + 1,
+      id: Math.max(...users.map(u => u.id), 0) + 1,
       ...userData,
-      photo: `https://images.unsplash.com/photo-${Math.floor(Math.random() * 10000)}?w=150&h=150&fit=crop&crop=face`
+      photo: `https://images.unsplash.com/photo-1559339352-11d035aa65de?w=150&h=150&fit=crop&crop=face`
     };
     
-    mockUsers.push(newUser);
+    const updatedUsers = [...users, newUser];
+    setUsers(updatedUsers);
+    localStorage.setItem('appUsers', JSON.stringify(updatedUsers));
+    
     return { success: true };
   };
 
