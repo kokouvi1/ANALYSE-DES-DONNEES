@@ -74,10 +74,13 @@ export const AuthProvider = ({ children }) => {
       setCurrentUser(updatedUser);
       localStorage.setItem('currentUser', JSON.stringify(updatedUser));
       
-      // Update in mock data
-      const userIndex = mockUsers.findIndex(u => u.id === currentUser.id);
+      // Update in users array
+      const userIndex = users.findIndex(u => u.id === currentUser.id);
       if (userIndex !== -1) {
-        mockUsers[userIndex] = updatedUser;
+        const updatedUsers = [...users];
+        updatedUsers[userIndex] = updatedUser;
+        setUsers(updatedUsers);
+        localStorage.setItem('appUsers', JSON.stringify(updatedUsers));
       }
       
       return { success: true };
@@ -85,13 +88,16 @@ export const AuthProvider = ({ children }) => {
     return { success: false, error: 'Utilisateur non connecté' };
   };
 
+  const getAllUsers = () => users;
+
   const value = {
     currentUser,
     isLoading,
     login,
     register,
     logout,
-    updateProfile
+    updateProfile,
+    getAllUsers
   };
 
   return (
